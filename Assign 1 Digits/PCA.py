@@ -9,4 +9,4 @@ train_img = idx2numpy.convert_from_file('train-images-idx3-ubyte')
 #train_imagesfile = open(filename['images'],'rb')
 trainImgArr = Image.fromarray(train_img[2],'L');
 trainImgArr.show();
-keyboard.wait('Ctrl')
+#keyboard.wait('Ctrl')
