@@ -27,13 +27,13 @@ covariance_matrix = np.matmul(train_img_2d.transpose(),train_img_2d)/60000;
 
 w,v = LA.eig(covariance_matrix);
 
-t = 10
+t = 30
 V = v[:,0:t];
 W = w[0:t];
 
 train_img_V = np.matmul(train_img_2d, V);
 
-test_no = 159
+test_no = 1008
 test_img_1 = test_img_2d[test_no];
 test_lab_1 = test_lab[test_no];
 
@@ -56,4 +56,7 @@ out = train_lab[k];
 print("k =   ",k, "   out=  ", out)
 print("ground truth value = ",test_lab_1)
 
+out_image = train_img[k];
+matchImg = Image.fromarray(out_image,'L');
+matchImg.show()
 #keyboard.wait('Ctrl')
