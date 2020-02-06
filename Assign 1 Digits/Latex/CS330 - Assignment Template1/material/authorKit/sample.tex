@@ -1,0 +1,112 @@
+\documentclass[twoside,11pt]{article}
+
+% Any additional packages needed should be included after pgm2016.
+% Note that pgm2016.sty includes epsfig, amssymb, natbib and graphicx,
+% and defines many common macros, such as 'proof' and 'example'.
+%
+% It also sets the bibliographystyle to plainnat; see the natbib 
+% documentation for more informations. 
+
+\usepackage{pgm2016}
+
+% Definitions of handy macros can go here
+
+\newcommand{\dataset}{{\cal D}}
+\newcommand{\fracpartial}[2]{\frac{\partial #1}{\partial  #2}}
+
+% Heading arguments are {volume}{year}{pages}{submitted}{published}{author-full-names}
+
+\pgmheading{1}{2000}{1-48}{4/00}{10/00}{Style and Elegance}
+
+% Short headings should be running head and authors last names
+
+\ShortHeadings{Writing a good paper}{Style and Elegance}
+\firstpageno{1}
+
+\begin{document}
+
+\title{Writing a good paper}
+
+\author{\name Style \email style@style.st \\
+       \addr Department of Applied Style \\
+       University of Science \\ 
+       Utopia City 
+       \AND
+       \name Elegance \email elegance@elegance.el \\
+       \addr Division of Structural Elegance \\
+       University of Science \\ 
+       Utopia City}
+
+\editor{Slightly under-indulgent editor}
+
+\maketitle
+
+\begin{abstract}%   <- trailing '%' for backward compatibility of .sty file
+Presentation is important, in every aspect of life. 
+Moreover when you want to present your revolutionary ideas to the whole
+world. Follow the example of this sample paper, and we'll make your work even more awesome. 
+\end{abstract}
+
+\begin{keywords}
+  Revolutionary ideas, changing the world
+\end{keywords}
+\section{Introduction}
+
+In this section we present what already knows, yet we have to invent new ways for saying it. 
+
+\subsection{Motivation}
+
+Some useful information for the authors.
+
+\begin{enumerate}
+\item Note that {\tt pgm2016.sty} includes {\tt epsfig}, {\tt amssymb}, {\tt natbib} and {\tt graphicx}, and defines many common macros, such as {\tt proof} and {\tt example}. Do not include the package {\tt theorem}, as it is known to conflict with the style.
+\item If you need native support to some special characters use UTF8 enconding as follows:
+\begin{verbatim}
+\usepackage[utf8]{inputenc}
+\inputencoding{utf8}
+\end{verbatim}
+\item Stick to standard tex packages. If you need to define custom commands (for example the common {\tt \\eg} for "e.g.") please do so in your main .tex file.
+\item For images use PDF or PNG files, included with {\tt \\includegraphics{imagefile}}. Avoid EPS images and the "epsfig" package, and the "\graphicspath" command.
+\end{enumerate}
+% Acknowledgements should go at the end, before appendices and references
+\acks{We would like to acknowledge support for this project
+from the Random Science Foundation (NSF grant IIS-0000000). }
+
+% Manual newpage inserted to improve layout of sample file - not
+% needed in general before appendices/bibliography.
+
+\newpage
+
+\appendix
+\section*{Appendix A.}
+\label{app:theorem}
+
+In this appendix we present a random filler theorem just for reaching the minimum page requirement. 
+
+\noindent
+{\bf Theorem} {\it Let $u,v,w$ be discrete variables such that $v, w$ do
+not co-occur with $u$ (i.e., $u\neq0\;\Rightarrow \;v=w=0$ in a given
+dataset $\dataset$). Let $N_{v0},N_{w0}$ be the number of data points for
+which $v=0, w=0$ respectively, and let $I_{uv},I_{uw}$ be the
+respective empirical mutual information values based on the sample
+$\dataset$. Then
+\[
+	N_{v0} \;>\; N_{w0}\;\;\Rightarrow\;\;I_{uv} \;\leq\;I_{uw}
+\]
+with equality only if $u$ is identically 0.} \hfill\BlackBox
+
+\noindent
+{\bf Proof}. We use the notation:
+\[
+P_v(i) \;=\;\frac{N_v^i}{N},\;\;\;i \neq 0;\;\;\;
+P_{v0}\;\equiv\;P_v(0)\; = \;1 - \sum_{i\neq 0}P_v(i).
+\]
+These values represent the (empirical) probabilities of $v$
+taking value $i\neq 0$ and 0 respectively.  Entropies will be denoted
+by $H$. We aim to show that $\fracpartial{I_{uv}}{P_{v0}} < 0$....\\
+
+{\noindent \em Remainder omitted in this sample. See http://www.jmlr.org/papers/ for full paper.}
+
+\vskip 0.2in
+\bibliography{sample}
+\end{document}
