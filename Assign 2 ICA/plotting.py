@@ -8,7 +8,6 @@ from numpy import matlib
 import sounddevice as sd
 import pickle as pkl
 # import ipdb;
-import ica_functions
 from scipy.io import loadmat;
 from IPython.display import Audio
 import matplotlib.pyplot as plt
