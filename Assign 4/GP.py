@@ -12,6 +12,7 @@ import ipdb;
 from scipy.io import loadmat;
 from IPython.display import Audio
 import matplotlib.pyplot as plt
+import random
 
 marker = '15';
 marker_x = marker+'_x';
@@ -28,89 +29,128 @@ sigma_l_arr = 0;
 sigma_f_arr = 0;
 sigma_n_arr = 0;
 
-for frame_start in range(0,20):
-    counter = 0;
-    data1 = np.array([0 , 0]);
-    data2 = np.array([0 , 0]);
-    data3 = np.array([0 , 0]);
-    data4 = np.array([0 , 0]);
-    data5 = np.array([0 , 0]);
-    with open('./data_GP/AG/block1-UNWEIGHTED-SLOW-NONDOMINANT-RANDOM/20161213203046-59968-right-speed_0.500.csv', newline='') as csvfile:
-         reader = csv.DictReader(csvfile)
-         for row in reader:
-             counter =counter+1;
-             # print(row['frame'], row['0_x'])
-             # ipdb.set_trace();
-             if(np.float64(row[marker_c])>0 and counter>=frame_start and counter<frame_start+window_size):
-                 data1 = np.vstack([data1, np.array([row[x_t], row[marker_x], row[marker_c]],dtype=float)]);
+#********************** Obtaining the data *********************************
+counter = 0;
+data1 = np.array([0 , 0, 0]);
+data2 = np.array([0 , 0, 0]);
+data3 = np.array([0 , 0, 0]);
+data4 = np.array([0 , 0, 0]);
+data5 = np.array([0 , 0, 0]);
+with open('./data_GP/AG/block1-UNWEIGHTED-SLOW-NONDOMINANT-RANDOM/20161213203046-59968-right-speed_0.500.csv', newline='') as csvfile:
+     reader = csv.DictReader(csvfile)
+     for row in reader:
+         counter =counter+1;
+         # print(row['frame'], row['0_x'])
+         # ipdb.set_trace();
+         # if(counter>=frame_start and counter<frame_start+window_size):
+         data1 = np.vstack([data1, np.array([row[x_t], row[marker_x], row[marker_c]],dtype=float)]);
 
-    data1=np.delete(data1,0,0);
+data1=np.delete(data1,0,0);
 
-    counter=0
-    with open('./data_GP/AG/block2-UNWEIGHTED-SLOW-NONDOMINANT-RANDOM/20161213204004-59968-right-speed_0.500.csv', newline='') as csvfile:
-         reader = csv.DictReader(csvfile)
-         for row in reader:
-             counter =counter+1;
-             # print(row['frame'], row['0_x'])
-             if(np.float64(row[marker_c])>0 and counter>=frame_start and counter<frame_start+window_size):
-                data2 = np.vstack([data2, np.array([row[x_t], row[marker_x], row[marker_c]],dtype=float)]);
+counter=0
+with open('./data_GP/AG/block2-UNWEIGHTED-SLOW-NONDOMINANT-RANDOM/20161213204004-59968-right-speed_0.500.csv', newline='') as csvfile:
+     reader = csv.DictReader(csvfile)
+     for row in reader:
+         counter =counter+1;
+         # print(row['frame'], row['0_x'])
+         # if(counter>=frame_start and counter<frame_start+window_size):
+         data2 = np.vstack([data2, np.array([row[x_t], row[marker_x], row[marker_c]],dtype=float)]);
 
-    data2=np.delete(data2,0,0);
+data2=np.delete(data2,0,0);
 
-    counter=0
-    with open('./data_GP/AG/block3-UNWEIGHTED-SLOW-NONDOMINANT-RANDOM/20161213204208-59968-right-speed_0.500.csv', newline='') as csvfile:
-         reader = csv.DictReader(csvfile)
-         for row in reader:
-             counter =counter+1;
-             # print(row['frame'], row['0_x'])
-             if(np.float64(row[marker_c])>0 and counter>=frame_start and counter<frame_start+window_size):
-                data3 = np.vstack([data3, np.array([row[x_t], row[marker_x], row[marker_c]],dtype=float)]);
-    data3=np.delete(data3,0,0);
-    #
-    #
-    #
-    counter=0
-    with open('./data_GP/AG/block4-UNWEIGHTED-SLOW-NONDOMINANT-RANDOM/20161213204925-59968-right-speed_0.500.csv', newline='') as csvfile:
-         reader = csv.DictReader(csvfile)
-         for row in reader:
-             counter =counter+1;
-             # print(row['frame'], row['0_x'])
-             if(np.float64(row[marker_c])>0 and counter>=frame_start and counter<frame_start+window_size):
-                data4 = np.vstack([data4, np.array([row[x_t], row[marker_x], row[marker_c]],dtype=float)]);
-    data4=np.delete(data4,0,0);
-    #
-    #
-    counter=0
-    with open('./data_GP/AG/block5-UNWEIGHTED-SLOW-NONDOMINANT-RANDOM/20161213210121-59968-right-speed_0.500.csv', newline='') as csvfile:
-         reader = csv.DictReader(csvfile)
-         for row in reader:
-             counter =counter+1;
-             # print(row['frame'], row['0_x'])
-             if(np.float64(row[marker_c])>0 and counter>=frame_start and counter<frame_start+window_size):
-                data5 = np.vstack([data5, np.array([row[x_t], row[marker_x], row[marker_c]],dtype=float)]);
-    data5=np.delete(data5,0,0);
-    ipdb.set_trace()
-    L = np.max([data1.shape,data2.shape,data3.shape,data4.shape,data5.shape])
-    data=data1;
+counter=0
+with open('./data_GP/AG/block3-UNWEIGHTED-SLOW-NONDOMINANT-RANDOM/20161213204208-59968-right-speed_0.500.csv', newline='') as csvfile:
+     reader = csv.DictReader(csvfile)
+     for row in reader:
+         counter =counter+1;
+         # print(row['frame'], row['0_x'])
+         # if(counter>=frame_start and counter<frame_start+window_size):
+         data3 = np.vstack([data3, np.array([row[x_t], row[marker_x], row[marker_c]],dtype=float)]);
+data3=np.delete(data3,0,0);
+#
+#
+#
+counter=0
+with open('./data_GP/AG/block4-UNWEIGHTED-SLOW-NONDOMINANT-RANDOM/20161213204925-59968-right-speed_0.500.csv', newline='') as csvfile:
+     reader = csv.DictReader(csvfile)
+     for row in reader:
+         counter =counter+1;
+         # print(row['frame'], row['0_x'])
+         # if(counter>=frame_start and counter<frame_start+window_size):
+         data4 = np.vstack([data4, np.array([row[x_t], row[marker_x], row[marker_c]],dtype=float)]);
+data4=np.delete(data4,0,0);
+#
+#
+counter=0
+with open('./data_GP/AG/block5-UNWEIGHTED-SLOW-NONDOMINANT-RANDOM/20161213210121-59968-right-speed_0.500.csv', newline='') as csvfile:
+     reader = csv.DictReader(csvfile)
+     for row in reader:
+         counter =counter+1;
+         # print(row['frame'], row['0_x'])
+         # if(counter>=frame_start and counter<frame_start+window_size):
+         data5 = np.vstack([data5, np.array([row[x_t], row[marker_x], row[marker_c]],dtype=float)]);
+data5=np.delete(data5,0,0);
+data = np.zeros((1010,2));
+counter=0;
+flag=0;
+for i in range(0,1010):
+    r=random.randint(1,5);
+    flag=0;
+    while flag==0:
+        if data1[i,2]<0 and data2[i,2]<0 and data3[i,2]<0 and data4[i,2]<0 and data5[i,2]<0:
+            flag=1;
+            continue;
+        elif r==1 and data1[i,2]>0:
+            data[counter,:] = data1[i,:-1];
+            counter=counter+1;
+            flag=1;
+        elif r==2 and data2[i,2]>0:
+            data[counter,:] = data2[i,:-1];
+            counter=counter+1;
+            flag=1;
+        elif r==3 and data3[i,2]>0:
+            data[counter,:] = data3[i,:-1];
+            counter=counter+1;
+            flag=1;
+        elif r==4 and data4[i,2]>0:
+            data[counter,:] = data4[i,:-1];
+            counter=counter+1;
+            flag=1;
+        elif r==5 and data5[i,2]>0:
+            data[counter,:] = data5[i,:-1];
+            counter=counter+1;
+            flag=1;
+        else:
+            r=random.randint(1,5);
+
+
+#************************ starting the window process ***********************************************
+for frame_start in range(0,900):
+
+    # ipdb.set_trace()
+    # L = np.max([data1.shape,data2.shape,data3.shape,data4.shape,data5.shape])
+
+
+    data_curr = data[frame_start:frame_start+window_size,:]
 
     from sklearn.gaussian_process import GaussianProcessRegressor
     # XX = data[:,0].reshape(-1,1);
-    XX = data[:,0].reshape(-1,1);
+    XX = data_curr[:,0].reshape(-1,1);
     XX=XX*1.0;
 
 
-    YY = data[:,1].reshape(-1,1);
+    YY = data_curr[:,1].reshape(-1,1);
 
-    sigma_f = 2;
-    sigma_l=0;
-    sigma_n = -3#-np.Inf;#1;#-2;
+    sigma_f = 1;
+    sigma_l=1;
+    sigma_n = 0#-np.Inf;#1;#-2;
     eta = 1e-3;
 
     L = XX.size
     K=np.zeros([L,L]);
     k = np.zeros([L,L]);
     kl = np.zeros([L,L]);
-    tol=2;
+    tol=1;
     dPdf = np.array([[1]]); dPdl = np.array([[1]]); dPdn = np.array([[1]]);
     err = (np.abs(dPdf[0,0])+np.abs(dPdl[0,0])+np.abs(dPdn[0,0]));
     count=0;
@@ -210,14 +250,16 @@ plt.savefig('./plots/marker_0_x.png');
 plt.show()
 ipdb.set_trace();
 plt.close();
-plt.plot(sigma_f_arr,'b')
+l1, = plt.plot(sigma_f_arr,'b', label='sigma_f')
 
-plt.plot(sigma_l_arr,'g')
+l2, = plt.plot(sigma_l_arr,'g', label='sigma_l')
 
-plt.plot(sigma_n_arr,'r')
+l3, = plt.plot(sigma_n_arr,'r', label='sigma_n')
+plt.legend(handles = [l1,l2, l3])
+plt.savefig('./plots/marker_'+marker+'_x_hyperparams.png');
 plt.show()
 
-hyper_param_arr = {"f": sigma_f_arr, "l":sigma_l_arr, "n":sigma_n_arr, "X":XX, "Y":YY}
+hyper_param_arr = {"f": sigma_f_arr, "l":sigma_l_arr, "n":sigma_n_arr, "X":data[:,0], "Y":data[:,1]}
 
 pkl.dump(hyper_param_arr,open("GP_hyperparam_0_x.p","wb"));
 ipdb.set_trace();
