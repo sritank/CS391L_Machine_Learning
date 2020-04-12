@@ -21,6 +21,8 @@ marker_z = marker+'_z';
 marker_c = marker+'_c';
 x_t = 'frame'
 
+def exponential_cov(x, y, sigma_f, sigma_l):
+    return np.exp(sigma_f) * np.exp( -0.5 * np.exp(sigma_l) * np.subtract.outer(x, y)**2)
 #***************Reading data from file********************************************
 
 
@@ -147,7 +149,7 @@ for i in range(0,1010):
             r=random.randint(1,2);
 
 
-# counter=0;
+counter=0;
 # for i in range(0,1010):
 #     if data1[i,2]<=0:
 #         continue;
@@ -157,38 +159,59 @@ for i in range(0,1010):
 
 # data = data1[:,:-1]
 window_size=1000
+test_pts=1;500
 #************************ starting the window process ***********************************************
-for frame_start in range(0,1):#data.shape[0]-100-window_size):
+# for frame_start in np.arange(0,1000,10):#data.shape[0]-100-window_size):
+for frame_start in range(0,1):
 
     # ipdb.set_trace()
     # L = np.max([data1.shape,data2.shape,data3.shape,data4.shape,data5.shape])
 
 
     data_curr = data[frame_start:frame_start+window_size,:]
+    # mask = np.zeros(window_size)
+    mask_i = np.arange(0,window_size,1)
 
-    from sklearn.gaussian_process import GaussianProcessRegressor
+    sampling = random.choices(mask_i, k=test_pts)
+    mask = np.zeros(window_size)>5
+    mask[sampling] = True
+    # Xpredict = data_curr[mask,0]
+    # Ypredict = data_curr[mask,1]
+    # XX = data_curr[np.invert(mask),0]
+    # YY = data_curr[np.invert(mask),1]
+    # XX=XX.reshape(-1,1);
+    # YY=YY.reshape(-1,1)
+    # data_test = data_curr[]
+    # ipdb.set_trace()
+
+    # from sklearn.gaussian_process import GaussianProcessRegressor
     # XX = data[:,0].reshape(-1,1);
     XX = data_curr[:,0].reshape(-1,1);
     XX=XX*1.0;
-
-
+    # XX = np.array([-2.1, -1.5, -0.7, 0.3, 1.0, 1.8, 2.5]).reshape(-1,1);
+    #
+    #
     YY = data_curr[:,1].reshape(-1,1);
-    Xpredict = data[frame_start+window_size:frame_start+window_size+15,0];
-    Ypredict = data[frame_start+window_size:frame_start+window_size+15,1];
-    sigma_f = 1;
-    sigma_l=2;
-    sigma_n = -3#-np.Inf;#1;#-2;
-    eta = 1e-2;
+    # YY=np.array([-1.5128756 , 0.52371713, -0.1382640378102619, -0.13952425, 0.4967141530112327, -0.93665367, -1.29343995]).reshape(-1,1);
+    # Xpredict = data[frame_start+window_size:frame_start+window_size+15,0];
+    # Ypredict = data[frame_start+window_size:frame_start+window_size+15,1];
+    sigma_f = -1;#-2.09;-2;
+    sigma_l=-8;#-7.6;-4;
+    sigma_n = -8;#np.Inf;-1;-6.28#-np.Inf;#1;#-2;
+    eta = 1e-3;
+    f=1;
+    fprev=f/2;
 
     L = XX.size
     K=np.zeros([L,L]);
     k = np.zeros([L,L]);
     kl = np.zeros([L,L]);
-    tol=0.5;
-    dPdf = np.array([[1]]); dPdl = np.array([[1]]); dPdn = np.array([[1]]);
-    err = 2;#(np.abs(dPdf[0,0])+np.abs(dPdl[0,0])+np.abs(dPdn[0,0]));
+    tol=2;
+    dPdf = np.array([[1]]); dPdl = np.array([[1]]); dPdn = np.array([[1e4]]);
+    err = 1;#(np.abs(dPdf[0,0])+np.abs(dPdl[0,0])+np.abs(dPdn[0,0]));
     err_prev = 10;
     err_prev_2 = 100;
+    err_grad = tol*2;
     count=0;
 
     Xii = np.multiply(XX,XX);
@@ -199,9 +222,12 @@ for frame_start in range(0,1):#data.shape[0]-100-window_size):
 
     # ipdb.set_trace()
 
-    # while err < err_prev:# or err_prev < err_prev_2:
-    while err > tol:
-        if count>3e3:
+    # while (err < err_prev and err_prev < err_prev_2) or err_grad>tol:
+    # while err < err_prev or err_grad>tol:
+
+    # while f>=fprev:# and count>3:
+    while    err_grad > tol:# or np.abs(dPdn[0,0])>500:
+        if count>1e4:
             break
 
         kp = np.exp(sigma_f)*np.exp(-0.5*np.exp(sigma_l)*XXi_XXj);
@@ -212,75 +238,103 @@ for frame_start in range(0,1):#data.shape[0]-100-window_size):
         Lc=np.linalg.cholesky(Q)
 
         Qinv = np.linalg.solve(Lc.transpose(),np.linalg.solve(Lc,np.eye(L)))
+        beta = np.linalg.solve(Lc.transpose(), np.linalg.solve(Lc,YY))
+        # negLogP = -0.5*YY.T.dot(Qinv).dot(YY) - np.sum(np.log(Lc)) - L/2*np.log(np.pi);
+        # negLogP = -0.5*YY.T.dot(beta) - np.sum(np.log(Lc)) - L/2*np.log(np.pi);
 
         dPdf = 0.5*(YY.transpose()).dot(Qinv).dot(kp).dot(Qinv).dot(YY) - 0.5*np.trace(Qinv.dot(kp));
 
         dPdl = 0.5*(YY.transpose()).dot(Qinv).dot(np.multiply(kp,kl)).dot(Qinv).dot(YY) - 0.5*np.trace(Qinv.dot(np.multiply(kp,kl)));
 
-        dPdn = 0.5*(YY.transpose()).dot(Qinv).dot(Qinv).dot(YY)*np.exp(sigma_n) - 0.5*np.trace(Qinv*np.exp(sigma_n));
+        dPdn = 0.5*(YY.transpose()).dot(Qinv).dot(Qinv).dot(YY)*np.exp(sigma_n) - 0.5*np.trace(Qinv)*np.exp(sigma_n);#should be -trace(Qinv) but that doesn't give right answer
 
         sigma_f = sigma_f + eta*dPdf;#-eta*dPdf doesn't converge
-        sigma_l = sigma_l + eta**2*dPdl;#-eta*dPdl doesn't converge
+        sigma_l = sigma_l + eta*dPdl;#-eta*dPdl doesn't converge
         sigma_n = sigma_n + eta*dPdn;#-eta*dPdn doesn't converge
-
-#************ Calculate prediction error **************************
-        # Xpredict = Xpredict.reshape(-1,1)
-        # Xpredict = Xpredict.transpose()
-        # Lpredict = Xpredict.size
-        # XXpred1 = np.matlib.repmat(XX,1,Lpredict)
-        # XXpred1 = np.multiply(XXpred1,XXpred1)
-        # XXpred2 = np.matlib.repmat(Xpredict,L,1)
-        # XXpred2 = np.multiply(XXpred2,XXpred2)
-        # XXpred = XXpred1+XXpred2-2*XX.dot(Xpredict)
-        #
-        # # Xpred_cov = np.multiply(np.matlib.repmat(Xpredict,Lpredict,1),np.matlib.repmat(Xpredict,Lpredict,1)) + (np.multiply(np.matlib.repmat(Xpredict,Lpredict,1),np.matlib.repmat(Xpredict,Lpredict,1))).transpose() -2*Xpredict.T.dot(Xpredict);
-        #
-        # KXpredX = np.exp(sigma_f)*np.exp(-0.5*np.exp(sigma_l)*XXpred.transpose())
-        # kp = np.exp(sigma_f)*np.exp(-0.5*np.exp(sigma_l)*XXi_XXj) + np.eye(L)*np.exp(sigma_n);
-        # mXpred = KXpredX.dot(LA.inv(kp)).dot(YY)
-
-        # err_prev_2 = err_prev;
-        # err_prev = err;
-        # err = np.sqrt(np.mean(np.multiply(Ypredict-mXpred, Ypredict-mXpred))); #(np.abs(dPdf[0,0])+np.abs(dPdl[0,0])+np.abs(dPdn[0,0]));
-        err = (np.abs(dPdf[0,0])+np.abs(dPdl[0,0])+np.abs(dPdn[0,0]));
-
+#
+# #************ Calculate prediction error **************************
+#         # Xpredict = Xpredict.reshape(-1,1)
+#         # Xpredict = Xpredict.transpose()
+#         # Lpredict = Xpredict.size
+#         # XXpred1 = np.matlib.repmat(XX,1,Lpredict)
+#         # XXpred1 = np.multiply(XXpred1,XXpred1)
+#         # XXpred2 = np.matlib.repmat(Xpredict,L,1)
+#         # XXpred2 = np.multiply(XXpred2,XXpred2)
+#         # XXpred = XXpred1+XXpred2-2*XX.dot(Xpredict)
+#
+#         # Xpred_cov = np.multiply(np.matlib.repmat(Xpredict,Lpredict,1),np.matlib.repmat(Xpredict,Lpredict,1)) + (np.multiply(np.matlib.repmat(Xpredict,Lpredict,1),np.matlib.repmat(Xpredict,Lpredict,1))).transpose() -2*Xpredict.T.dot(Xpredict);
+#
+#         # KXpredX = np.exp(sigma_f)*np.exp(-0.5*np.exp(sigma_l)*XXpred.transpose())
+#         # kp = np.exp(sigma_f)*np.exp(-0.5*np.exp(sigma_l)*XXi_XXj) + np.eye(L)*np.exp(sigma_n);
+#         # mXpred = KXpredX.dot(LA.inv(kp)).dot(YY)
+#         #
+#         # err_prev_2 = err_prev;
+#         # err_prev = err;
+#         # err = np.sqrt(np.mean(np.multiply(Ypredict-mXpred, Ypredict-mXpred)));
+        # err_grad = (np.abs(dPdf[0,0])+np.abs(dPdl[0,0]));#+np.abs(dPdn[0,0]));
+        err_grad = (np.abs(dPdf[0,0])+np.abs(dPdl[0,0])+np.abs(dPdn[0,0]));
+#
+#         fprev=f;
+#         f=negLogP;
+#         # err_grad = np.abs(dPdl[0,0]);
+#         # err_grad=0;
+#         # print("count=",count)
+#         # print("grad=",err_grad)
         count=count+1;
-        # print("count=",count)
-        # print("err=",err)
-        # print("sigma_l=",sigma_l)
-        # print("sigma_n=",sigma_n)
-        # print("sigma_f=",sigma_f)
-        # print("det=",LA.det(Q))
-        # ipdb.set_trace();
-
+#         # print("count=",count)
+#         # print("err=",err)
+#         # print("f=",f)
+#         # print("sigma_l=",sigma_l)
+#         # print("sigma_n=",sigma_n)
+#         # print("sigma_f=",sigma_f)
+#         # print("det=",LA.det(Q))
+#         # ipdb.set_trace();
+#
     print("count=",count)
     print("err=",err)
     print("sigma_l=",sigma_l)
     print("sigma_n=",sigma_n)
     print("sigma_f=",sigma_f)
     print("det=",LA.det(Q))
-    if count<5000:
-        sigma_n_arr = np.vstack([sigma_n_arr, sigma_n]);
-        sigma_f_arr = np.vstack([sigma_f_arr, sigma_f]);
-        sigma_l_arr = np.vstack([sigma_l_arr, sigma_l]);
-
-
-
-
-#*********** Predicting new values ***************************
-
+    # if count<5000:
+    sigma_n_arr = np.vstack([sigma_n_arr, sigma_n]);
+    sigma_f_arr = np.vstack([sigma_f_arr, sigma_f]);
+    sigma_l_arr = np.vstack([sigma_l_arr, sigma_l]);
+#
+#
+#
+#
+# #*********** Predicting new values ***************************
+#
 # sigma_f = 0;#1;
 # sigma_l=np.log(10);#2;
 # sigma_n = -np.Inf;#1;#-2;
-sigma_l_arr = np.delete(sigma_l_arr,0)
-sigma_f_arr = np.delete(sigma_f_arr,0)
-sigma_n_arr = np.delete(sigma_n_arr,0)
+# sigma_l_arr = np.delete(sigma_l_arr,0)
+# sigma_f_arr = np.delete(sigma_f_arr,0)
+# sigma_n_arr = np.delete(sigma_n_arr,0)
 
-
-Xstar = np.linspace(XX[0],XX[-1],window_size*10);#XX+0.5;
+# ipdb.set_trace();
+Xstar = np.linspace(XX[0],XX[-1],window_size*3);#XX+0.5;
+# Xstar = np.linspace(-3,3,1000)
+# Xstar = np.array([1.5, 2.5, 3.5, 4.5, 5.5, 9.5, 15.5, 17.5, 18.5])
 Xstar = Xstar.reshape(-1,1)
 Xstar = Xstar.transpose()
+
+B = exponential_cov(Xstar, XX, sigma_f, sigma_l)
+C = exponential_cov(XX, XX, sigma_f, sigma_l)
+A = exponential_cov(Xstar, Xstar, sigma_f, sigma_l)
+#
 L1 = Xstar.size
+B=B.reshape(L1,L)
+C=C.reshape(L,L)
+A=A.reshape(L1,L1)
+#
+# mu = B.dot(np.linalg.inv(C)).dot(YY) #np.linalg.inv(C).dot(B.T).T.dot(YY)
+# mu = np.linalg.inv(C).dot(B.T).T.dot(YY);
+sigma = A - B.dot(np.linalg.inv(C).dot(B.T))
+
+
+
 XXstar1 = np.matlib.repmat(XX,1,L1)
 XXstar1 = np.multiply(XXstar1,XXstar1)
 XXstar2 = np.matlib.repmat(Xstar,L,1)
@@ -291,18 +345,28 @@ Xstar_cov = np.multiply(np.matlib.repmat(Xstar,L1,1),np.matlib.repmat(Xstar,L1,1
 
 KXstarX = np.exp(sigma_f)*np.exp(-0.5*np.exp(sigma_l)*XXstar.transpose())
 kp = np.exp(sigma_f)*np.exp(-0.5*np.exp(sigma_l)*XXi_XXj) + np.eye(L)*np.exp(sigma_n);
-mXstar = KXstarX.dot(LA.inv(kp)).dot(YY)
-PXstar = np.exp(sigma_f)*np.exp(-0.5*np.exp(sigma_l)*Xstar_cov) - KXstarX.dot(LA.inv(kp)).dot(KXstarX.transpose())
+Lc_kp=np.linalg.cholesky(kp)
 
+kpinv = np.linalg.solve(Lc_kp.transpose(),np.linalg.solve(Lc_kp,np.eye(L)))
+
+mXstar = KXstarX.dot(kpinv).dot(YY)
+
+# mXstar = KXstarX.dot(LA.inv(kp)).dot(YY)
+
+PXstar = np.exp(sigma_f)*np.exp(-0.5*np.exp(sigma_l)*Xstar_cov) + np.eye(L1)*np.exp(sigma_n) - KXstarX.dot(kpinv).dot(KXstarX.transpose())
+
+# PXstar = np.exp(sigma_f)*np.exp(-0.5*np.exp(sigma_l)*Xstar_cov) - KXstarX.dot(kpinv).dot(KXstarX.transpose())
 
 # Ym = gpr.predict(Xstar.T,return_std=True);
 
 c1=np.diagonal(PXstar)#.reshape(-1,1);
 
 plt.errorbar(Xstar.T,mXstar, yerr=np.sqrt(np.diagonal(PXstar))*2)
-
+# plt.errorbar((Xstar).T,mu, yerr=np.sqrt(np.diagonal(sigma)),color='b')
 # plt.plot(Xstar.T,Ym[0],'ro');
-plt.plot(XX,YY,'g--')
+# plt.plot(XX,YY,'g--')
+# plt.plot(Xstar.T,mu,color='g')
+plt.plot(Xstar.T,mXstar,color='g')
 plt.plot(XX,YY,'ro')
 plt.savefig('./plots/marker_0_x.png');
 plt.show()
