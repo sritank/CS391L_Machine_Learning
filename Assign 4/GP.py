@@ -13,6 +13,7 @@ from scipy.io import loadmat;
 from IPython.display import Audio
 import matplotlib.pyplot as plt
 import random
+import sys
 
 marker = '15';
 marker_x = marker+'_x';
@@ -126,43 +127,50 @@ for i in range(0,1010):
             flag=1;
         else:
             r=random.randint(1,5);
-
+# data_report = pkl.load(open("./GP_hyperparam_15_x_report.p","rb"));
+# data=np.zeros((1000,2))
+# data[:,0] = data_report['X'].reshape(-1,)
+# data[:,1] = data_report['Y'].reshape(-1,)
 # ************** mixing 2 traces **********************************
-counter=0;
-flag=0;
-for i in range(0,1010):
-    r=random.randint(1,2);
-    flag=0;
-    while flag==0:
-        if data1[i,2]<0 and data2[i,2]<0:
-            flag=1;
-            continue;
-        elif r==1 and data1[i,2]>0:
-            data[counter,:] = data1[i,:-1];
-            counter=counter+1;
-            flag=1;
-        elif r==2 and data2[i,2]>0:
-            data[counter,:] = data2[i,:-1];
-            counter=counter+1;
-            flag=1;
-        else:
-            r=random.randint(1,2);
-
-
-counter=0;
+# counter=0;
+# flag=0;
 # for i in range(0,1010):
-#     if data1[i,2]<=0:
-#         continue;
-#     else:
-#         data[counter,:] = data1[i,:-1];
-#         counter=counter+1;
+#     r=random.randint(1,2);
+#     flag=0;
+#     while flag==0:
+#         if data1[i,2]<0 and data2[i,2]<0:
+#             flag=1;
+#             continue;
+#         elif r==1 and data1[i,2]>0:
+#             data[counter,:] = data1[i,:-1];
+#             counter=counter+1;
+#             flag=1;
+#         elif r==2 and data2[i,2]>0:
+#             data[counter,:] = data2[i,:-1];
+#             counter=counter+1;
+#             flag=1;
+#         else:
+#             r=random.randint(1,2);
+
+
+counter=0;
+for i in range(0,1010):
+    if data1[i,2]<=0:
+        continue;
+    else:
+        data[counter,:] = data1[i,:-1];
+        counter=counter+1;
 
 # data = data1[:,:-1]
-window_size=1000
-test_pts=1;500
+window_size=100
+test_pts=1;
+window_start=0
+window_end=1000-window_size
+delta=5
+logP_local=[0];
 #************************ starting the window process ***********************************************
-# for frame_start in np.arange(0,1000,10):#data.shape[0]-100-window_size):
-for frame_start in range(0,1):
+for frame_start in np.arange(window_start,window_end,delta):#data.shape[0]-100-window_size):
+# for frame_start in range(0,1):
 
     # ipdb.set_trace()
     # L = np.max([data1.shape,data2.shape,data3.shape,data4.shape,data5.shape])
@@ -195,10 +203,10 @@ for frame_start in range(0,1):
     # YY=np.array([-1.5128756 , 0.52371713, -0.1382640378102619, -0.13952425, 0.4967141530112327, -0.93665367, -1.29343995]).reshape(-1,1);
     # Xpredict = data[frame_start+window_size:frame_start+window_size+15,0];
     # Ypredict = data[frame_start+window_size:frame_start+window_size+15,1];
-    sigma_f = -1;#-2.09;-2;
-    sigma_l=-8;#-7.6;-4;
-    sigma_n = -8;#np.Inf;-1;-6.28#-np.Inf;#1;#-2;
-    eta = 1e-3;
+    sigma_f = -1;2;#-2.09;-2;
+    sigma_l=-8;-6;#-7.6;-4;
+    sigma_n = -8;-9;#np.Inf;-1;-6.28#-np.Inf;#1;#-2;
+    eta = 1e-2;
     f=1;
     fprev=f/2;
 
@@ -241,6 +249,7 @@ for frame_start in range(0,1):
         beta = np.linalg.solve(Lc.transpose(), np.linalg.solve(Lc,YY))
         # negLogP = -0.5*YY.T.dot(Qinv).dot(YY) - np.sum(np.log(Lc)) - L/2*np.log(np.pi);
         # negLogP = -0.5*YY.T.dot(beta) - np.sum(np.log(Lc)) - L/2*np.log(np.pi);
+        # negLogP = -0.5*YY.T.dot(Qinv).dot(YY) - 0.5*(np.log(LA.det(Q)+sys.float_info.min)) - L/2*np.log(2*np.pi);
 
         dPdf = 0.5*(YY.transpose()).dot(Qinv).dot(kp).dot(Qinv).dot(YY) - 0.5*np.trace(Qinv.dot(kp));
 
@@ -279,7 +288,7 @@ for frame_start in range(0,1):
 #         # err_grad = np.abs(dPdl[0,0]);
 #         # err_grad=0;
 #         # print("count=",count)
-#         # print("grad=",err_grad)
+        # print("grad=",err_grad)
         count=count+1;
 #         # print("count=",count)
 #         # print("err=",err)
@@ -300,38 +309,84 @@ for frame_start in range(0,1):
     sigma_n_arr = np.vstack([sigma_n_arr, sigma_n]);
     sigma_f_arr = np.vstack([sigma_f_arr, sigma_f]);
     sigma_l_arr = np.vstack([sigma_l_arr, sigma_l]);
+    # negLogP = -0.5*YY.T.dot(Qinv).dot(YY) - 0.5*(np.log(LA.det(Q)+sys.float_info.min)) - L/2*np.log(2*np.pi);
+    # logP_local = np.vstack([logP_local, negLogP]);
+    #
+    # ipdb.set_trace()
+#********************** Plotting local kernels, comment if not plotting ***************************
+#     Xstar = np.linspace(XX[0],XX[-1],window_size*10);#XX+0.5;
+#     # Xstar = np.linspace(-3,3,1000)
+#     # Xstar = np.array([1.5, 2.5, 3.5, 4.5, 5.5, 9.5, 15.5, 17.5, 18.5])
+#     Xstar = Xstar.reshape(-1,1)
+#     Xstar = Xstar.transpose()
+#     L1 = Xstar.size
+#     XXstar1 = np.matlib.repmat(XX,1,L1)
+#     XXstar1 = np.multiply(XXstar1,XXstar1)
+#     XXstar2 = np.matlib.repmat(Xstar,L,1)
+#     XXstar2 = np.multiply(XXstar2,XXstar2)
+#     XXstar = XXstar1+XXstar2-2*XX.dot(Xstar)
+#
+#     Xstar_cov = np.multiply(np.matlib.repmat(Xstar,L1,1),np.matlib.repmat(Xstar,L1,1)) + (np.multiply(np.matlib.repmat(Xstar,L1,1),np.matlib.repmat(Xstar,L1,1))).transpose() -2*Xstar.T.dot(Xstar);
+#
+#     KXstarX = np.exp(sigma_f)*np.exp(-0.5*np.exp(sigma_l)*XXstar.transpose())
+#     kp = np.exp(sigma_f)*np.exp(-0.5*np.exp(sigma_l)*XXi_XXj) + np.eye(L)*np.exp(sigma_n);
+#     Lc_kp=np.linalg.cholesky(kp)
+#
+#     kpinv = np.linalg.solve(Lc_kp.transpose(),np.linalg.solve(Lc_kp,np.eye(L)))
+#     mXstar = KXstarX.dot(kpinv).dot(YY)
+#
+#     PXstar = np.exp(sigma_f)*np.exp(-0.5*np.exp(sigma_l)*Xstar_cov) + np.eye(L1)*np.exp(sigma_n) - KXstarX.dot(kpinv).dot(KXstarX.transpose())
+#
+#     plt.errorbar(Xstar.T,mXstar,color=[0,0,0], yerr=np.sqrt(np.diagonal(PXstar))*2, ecolor = [0.7,0.7,0.7], label='GP mean function')
+#     plt.plot(Xstar.T,mXstar,color='k')
+#
+#
+# l1,=plt.plot(data[:,0],data[:,1],'r.',label='input data')
+#
+# plt.title('Local GP kernels fitted to mixture of 5 traces')
+# plt.xlabel('Frame number')
+# plt.ylabel('Position (m)')
+# plt.legend(handles = [l1])
+# plt.rcParams.update({'font.size': 25})
+# plt.show()
+
+# logP_report_kernels = {"logP": logP_local}
+# pkl.dump(logP_report_kernels,open("GP_logP_local.p","wb"))
+
+#***********************************************************************************************
+
 #
 #
 #
 #
 # #*********** Predicting new values ***************************
 #
-# sigma_f = 0;#1;
-# sigma_l=np.log(10);#2;
-# sigma_n = -np.Inf;#1;#-2;
-# sigma_l_arr = np.delete(sigma_l_arr,0)
-# sigma_f_arr = np.delete(sigma_f_arr,0)
-# sigma_n_arr = np.delete(sigma_n_arr,0)
-
+# sigma_f = 2; 0;#1;
+# sigma_l= -6; np.log(10);#2;
+# sigma_n = -9; -np.Inf;#1;#-2;
+sigma_l_arr = np.delete(sigma_l_arr,0)
+sigma_f_arr = np.delete(sigma_f_arr,0)
+sigma_n_arr = np.delete(sigma_n_arr,0)
+logP_local = np.delete(logP_local,0)
 # ipdb.set_trace();
 Xstar = np.linspace(XX[0],XX[-1],window_size*3);#XX+0.5;
 # Xstar = np.linspace(-3,3,1000)
 # Xstar = np.array([1.5, 2.5, 3.5, 4.5, 5.5, 9.5, 15.5, 17.5, 18.5])
 Xstar = Xstar.reshape(-1,1)
 Xstar = Xstar.transpose()
-
-B = exponential_cov(Xstar, XX, sigma_f, sigma_l)
-C = exponential_cov(XX, XX, sigma_f, sigma_l)
-A = exponential_cov(Xstar, Xstar, sigma_f, sigma_l)
-#
 L1 = Xstar.size
-B=B.reshape(L1,L)
-C=C.reshape(L,L)
-A=A.reshape(L1,L1)
-#
-# mu = B.dot(np.linalg.inv(C)).dot(YY) #np.linalg.inv(C).dot(B.T).T.dot(YY)
-# mu = np.linalg.inv(C).dot(B.T).T.dot(YY);
-sigma = A - B.dot(np.linalg.inv(C).dot(B.T))
+
+
+# B = exponential_cov(Xstar, XX, sigma_f, sigma_l)
+# C = exponential_cov(XX, XX, sigma_f, sigma_l)
+# A = exponential_cov(Xstar, Xstar, sigma_f, sigma_l)
+# B=B.reshape(L1,L)
+# C=C.reshape(L,L)
+# A=A.reshape(L1,L1)
+# #
+# # mu = B.dot(np.linalg.inv(C)).dot(YY) #np.linalg.inv(C).dot(B.T).T.dot(YY)
+# # mu = np.linalg.inv(C).dot(B.T).T.dot(YY);
+# sigma = A - B.dot(np.linalg.inv(C).dot(B.T))
 
 
 
@@ -361,30 +416,85 @@ PXstar = np.exp(sigma_f)*np.exp(-0.5*np.exp(sigma_l)*Xstar_cov) + np.eye(L1)*np.
 
 c1=np.diagonal(PXstar)#.reshape(-1,1);
 
-plt.errorbar(Xstar.T,mXstar, yerr=np.sqrt(np.diagonal(PXstar))*2)
+l1,l2,l3 = plt.errorbar(Xstar.T,mXstar,color=[0,0,0], yerr=np.sqrt(np.diagonal(PXstar))*2, ecolor = [0.7,0.7,0.7], label='GP mean function')
 # plt.errorbar((Xstar).T,mu, yerr=np.sqrt(np.diagonal(sigma)),color='b')
 # plt.plot(Xstar.T,Ym[0],'ro');
 # plt.plot(XX,YY,'g--')
 # plt.plot(Xstar.T,mu,color='g')
-plt.plot(Xstar.T,mXstar,color='g')
-plt.plot(XX,YY,'ro')
+l4,=plt.plot(Xstar.T,mXstar,color='k', label='Optimal GP mean function')
+l5, = plt.plot(XX,YY,'r.',label='input data')
+plt.title('Optimal GP kernel fitted to mixture of 5 traces')
+plt.xlabel('Frame number')
+plt.ylabel('Position (m)')
+plt.legend(handles = [l4,l5])
+plt.rcParams.update({'font.size': 25})
 plt.savefig('./plots/marker_0_x.png');
 plt.show()
 ipdb.set_trace();
 plt.close();
-l1, = plt.plot(sigma_f_arr,'b', label='sigma_f')
+l1, = plt.plot(np.arange(window_start,window_end,delta),sigma_f_arr,'b', label='sigma_f')
 
-l2, = plt.plot(sigma_l_arr,'g', label='sigma_l')
+l2, = plt.plot(np.arange(window_start,window_end,delta),sigma_l_arr,'g', label='sigma_l')
 
-l3, = plt.plot(sigma_n_arr,'r', label='sigma_n')
+l3, = plt.plot(np.arange(window_start,window_end,delta),sigma_n_arr,'r', label='sigma_n')
+
 l4, = plt.plot(data[:,0],data[:,1],'k', label='trajectory')
+
+# l5, = plt.plot(np.arange(window_start,window_end,delta),sigma_f_arr*0-1.79495408,'--b', label='sigma_f_global')
+#
+# l6, = plt.plot(np.arange(window_start,window_end,delta),sigma_l_arr*0-8.27030516,'--g', label='sigma_l_global')
+#
+# l7, = plt.plot(np.arange(window_start,window_end,delta),sigma_n_arr*0-6.33156224,'--r', label='sigma_n_global')
+
+# plt.legend(handles = [l1,l2,l3,l4,l5,l6,l7])
 plt.legend(handles = [l1,l2,l3,l4])
 
+plt.xlabel('Frame number')
+plt.ylabel('hyperparam value')
+plt.xlim(-10,1400)
+plt.title('Hyperparams Subject:AG, marker:15_x, Single trace')
+plt.rcParams.update({'font.size': 17})
 plt.savefig('./plots/marker_'+marker+'_x_hyperparams.png');
 
 plt.show()
 
-hyper_param_arr = {"f": sigma_f_arr, "l":sigma_l_arr, "n":sigma_n_arr, "X":data[:,0], "Y":data[:,1]}
+plt.hist(sigma_f_arr,bins=70)
+plt.xlabel('sigma_f_value')
+plt.ylabel('frequency')
+plt.title('Histogram of sigma_f')
+plt.rcParams.update({'font.size': 17})
+plt.show()
+
+
+plt.hist(sigma_l_arr,bins=70)
+plt.xlabel('sigma_l_value')
+plt.ylabel('frequency')
+plt.title('Histogram of sigma_l')
+plt.rcParams.update({'font.size': 17})
+plt.show()
+
+plt.hist(sigma_n_arr,bins=70)
+plt.xlabel('sigma_n_value')
+plt.ylabel('frequency')
+plt.title('Histogram of sigma_n')
+plt.rcParams.update({'font.size': 17})
+plt.show()
+
+
+l1, = plt.plot(data1[data1[:,2]>0,0],data1[data1[:,2]>0,1], label='trial 1',linewidth='2',color='b')
+l2, = plt.plot(data2[data2[:,2]>0,0],data2[data2[:,2]>0,1], label='trial 2',linewidth='2',color='g')
+l3, = plt.plot(data3[data3[:,2]>0,0],data3[data3[:,2]>0,1], label='trial 3',linewidth='2',color='r')
+l4, = plt.plot(data4[data4[:,2]>0,0],data4[data4[:,2]>0,1], label='trial 4',linewidth='2',color='k')
+l5, = plt.plot(data5[data5[:,2]>0,0],data5[data5[:,2]>0,1], label='trial 5',linewidth='2',color='c')
+plt.legend(handles = [l1,l2,l3,l4,l5])
+plt.title('Subject:AG, marker:15_x, trajectory')
+plt.xlabel('Frame number')
+plt.ylabel('Position (m)')
+plt.rcParams.update({'font.size': 22})
+plt.show()
+
+# hyper_param_arr = {"f": sigma_f_arr, "l":sigma_l_arr, "n":sigma_n_arr, "X":data[:,0], "Y":data[:,1]}
+hyper_param_arr = {"f": sigma_f_arr, "l":sigma_l_arr, "n":sigma_n_arr, "X":XX, "Y":YY}
 
 pkl.dump(hyper_param_arr,open("GP_hyperparam_0_x.p","wb"));
 ipdb.set_trace();
