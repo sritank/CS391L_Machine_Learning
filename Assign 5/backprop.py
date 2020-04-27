@@ -78,12 +78,12 @@ train_lab_vec = (train_lab_vec.reshape(L_train,n3)).transpose();
 
 
 # for i in range(0,L_train):
-eta=1;
-tol = 5e-3;
+eta=5e-2;
+tol = 1e-4;
 err_cum = tol*1e3;
 err_cum_prev=err_cum*1e3;
 # train_samples = L_train;
-train_samples = 20000;
+train_samples = 60000;
 # for j in range(0,1000):
 # while err_cum>tol:# and err_cum_prev>err_cum:
 #
@@ -144,13 +144,63 @@ train_samples = 20000;
 
 
 
+# while err_cum>tol:# and err_cum_prev>err_cum:
+#     Delta2 = W2_b*0.0;
+#     Delta3 = W3_b*0.0;
+#     # err_cum_prev=err_cum;
+#     err_cum = 0.0;
+#     for i in range(0,train_samples):
+#
+#         z2 = W2_b.dot(train_img_input[:,i].reshape(-1,1));
+#         z2_b = np.vstack([np.ones((1,z2.shape[1])), z2]);
+#         a2 = actFcn(z2);
+#         a2_b = np.vstack([np.ones((1,a2.shape[1])), a2]);
+#
+#         z3 = W3_b.dot(a2_b);
+#         a3 = actFcn(z3);
+#
+#         # delta3 = np.multiply(a3 - train_lab_vec[:,i].reshape(-1,1),actFcnDer(z3))#if using RMS cost function
+#         delta3 = -(train_lab_vec[:,i].reshape(-1,1) - a3);#if using log cost function from Andrew Ng
+#         # delta3 = np.multiply(-(train_lab_vec[:,i].reshape(-1,1) - a3), actFcnDer(z3));
+#         # delta2 = np.multiply(W3_b.T.dot(delta3), a2_b)
+#         delta2 = np.multiply(W3_b.T.dot(delta3), actFcnDer(z2_b));
+#         delta2 = np.delete(delta2,0,0);
+#
+#         # o=feedForward(train_img_input[:,0],W2_b,W3_b);
+#
+#
+#         # d3 = delta3[:,i].reshape(-1,1);
+#         d3 = delta3.reshape(-1,1);
+#         # ipdb.set_trace()
+#         # a2_b_vec = a2_b[:,i].reshape(-1,1);
+#         a2_b_vec = a2_b.reshape(-1,1);
+#         # Delta3 = Delta3 + d3.dot(a2_b_vec.T)/L_train;
+#         Delta3 = Delta3 + d3.dot(a2_b_vec.T)/train_samples;#if using log cost function
+#         # ipdb.set_trace()
+#         # d2 = delta2[:,i].reshape(-1,1);
+#         d2 = delta2.reshape(-1,1);
+#         a1_b_vec = train_img_input[:,i].reshape(-1,1);
+#         # Delta2 = Delta2 + d2.dot(a1_b_vec.T)/L_train;
+#         Delta2 = Delta2 + d2.dot(a1_b_vec.T)/train_samples;#if using log cost function
+#         err_cum = err_cum + np.mean(np.multiply(delta3,delta3));
+#         # err_cum = err_cum + np.mean(np.multiply((train_lab_vec[:,i].reshape(-1,1) - a3),(train_lab_vec[:,i].reshape(-1,1) - a3)));#if using RMS cost function
+#     err_cum = err_cum/train_samples;
+#     print(err_cum)
+#     W3_b = W3_b - eta*Delta3;
+#     W2_b = W2_b - eta*Delta2;
+#     # ipdb.set_trace()
+
+
+
+
+
 while err_cum>tol:# and err_cum_prev>err_cum:
-    Delta2 = W2_b*0.0;
-    Delta3 = W3_b*0.0;
+
     # err_cum_prev=err_cum;
     err_cum = 0.0;
     for i in range(0,train_samples):
-
+        Delta2 = W2_b*0.0;
+        Delta3 = W3_b*0.0;
         z2 = W2_b.dot(train_img_input[:,i].reshape(-1,1));
         z2_b = np.vstack([np.ones((1,z2.shape[1])), z2]);
         a2 = actFcn(z2);
@@ -175,20 +225,21 @@ while err_cum>tol:# and err_cum_prev>err_cum:
         # a2_b_vec = a2_b[:,i].reshape(-1,1);
         a2_b_vec = a2_b.reshape(-1,1);
         # Delta3 = Delta3 + d3.dot(a2_b_vec.T)/L_train;
-        Delta3 = Delta3 + d3.dot(a2_b_vec.T)/train_samples;#if using log cost function
+        Delta3 = Delta3 + d3.dot(a2_b_vec.T);#if using log cost function
         # ipdb.set_trace()
         # d2 = delta2[:,i].reshape(-1,1);
         d2 = delta2.reshape(-1,1);
         a1_b_vec = train_img_input[:,i].reshape(-1,1);
         # Delta2 = Delta2 + d2.dot(a1_b_vec.T)/L_train;
-        Delta2 = Delta2 + d2.dot(a1_b_vec.T)/train_samples;#if using log cost function
+        Delta2 = Delta2 + d2.dot(a1_b_vec.T);#if using log cost function
         err_cum = err_cum + np.mean(np.multiply(delta3,delta3));
+        W3_b = W3_b - eta*Delta3;
+        W2_b = W2_b - eta*Delta2;
         # err_cum = err_cum + np.mean(np.multiply((train_lab_vec[:,i].reshape(-1,1) - a3),(train_lab_vec[:,i].reshape(-1,1) - a3)));#if using RMS cost function
     err_cum = err_cum/train_samples;
     print(err_cum)
-    W3_b = W3_b - eta*Delta3;
-    W2_b = W2_b - eta*Delta2;
-    # ipdb.set_trace()
+
+
 
 
 test_image_no = 1005
