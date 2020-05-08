@@ -71,6 +71,7 @@ train_lab_vec = (train_lab_vec.reshape(L_train,n3)).transpose();
 eta=5e-2;
 tol = 6e-3;
 err_cum = tol*1e3;
+err_cum_arr = 0;
 err_cum_prev=err_cum*1e3;
 # train_samples = L_train;
 train_samples = 60000;
@@ -219,10 +220,11 @@ while err_cum>tol:# and err_cum_prev>err_cum:
         W2_b = W2_b - eta*Delta2;
         err_cum = err_cum + np.mean(np.multiply((train_lab_vec[:,i].reshape(-1,1) - a3),(train_lab_vec[:,i].reshape(-1,1) - a3)));#if using RMS cost function
     err_cum = err_cum/train_samples;
+    err_cum_arr = np.vstack([err_cum_arr,err_cum]);
     print(err_cum)
 #**************************************************************************************************************
 
-
+err_cum_arr = np.delete(err_cum_arr,0,0)
 
 # test_image_no = 1005
 # o=feedForward(train_img_input[:,test_image_no],W2_b,W3_b);

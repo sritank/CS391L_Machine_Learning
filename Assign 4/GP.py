@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import random
 import sys
 
-marker = '15';
+marker = '8';
 marker_x = marker+'_x';
 marker_y = marker+'_y';
 marker_z = marker+'_z';
@@ -153,13 +153,13 @@ for i in range(0,1010):
 #             r=random.randint(1,2);
 
 
-counter=0;
-for i in range(0,1010):
-    if data1[i,2]<=0:
-        continue;
-    else:
-        data[counter,:] = data1[i,:-1];
-        counter=counter+1;
+#counter=0;
+#for i in range(0,1010):
+#    if data1[i,2]<=0:
+#        continue;
+#    else:
+#        data[counter,:] = data1[i,:-1];
+#        counter=counter+1;
 
 # data = data1[:,:-1]
 window_size=100
