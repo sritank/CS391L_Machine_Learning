@@ -14,6 +14,7 @@ from IPython.display import Audio
 import matplotlib.pyplot as plt
 import random
 import sys
+from sklearn.preprocessing import normalize
 
 H=7; L=25;
 W=9; D=25;
@@ -24,13 +25,13 @@ Q = np.random.rand(H*L,H*L)*1e-3;
 T = np.zeros((H*L,H*L));
 H=6; L=3;
 sidewalk_penalty = 50.;
-sidewalk_reward = 0.;
+sidewalk_reward = 5.;
 R = np.zeros((H,L))-sidewalk_penalty;
 Q = np.random.rand(H,L)*1e-3;
 #R = np.zeros((16,3))
 #R states are 000, 001, 011, 111, 110, 100; 1=on sidewalk, 0=not on sidewalk
 #actions are move NE, move E, move SE
-dict = {'000':0, '001':1, '011':2, '111':3, '110':4, '100':5}
+dict_s = {'000':0, '001':1, '011':2, '111':3, '110':4, '100':5}
 
 R[1,2] = sidewalk_reward;
 R[2,1:] = sidewalk_reward;
@@ -63,7 +64,7 @@ while iter<iter_max:
         break
     while  jj<D-1:
         st_int = str(O[i+1,jj+1])+ str(O[i,jj+1]) + str(O[i-1,jj+1]);
-        st = dict[st_int];
+        st = dict_s[st_int];
         val_act_picked=0;
         # ipdb.set_trace()
         while val_act_picked!=1:
@@ -88,17 +89,17 @@ while iter<iter_max:
             next_st_int = '111';
         else:
             next_st_int = str(O[i+1,jj+1])+ str(O[i,jj+1]) + str(O[i-1,jj+1]);
-        sprime = dict[next_st_int];
+        sprime = dict_s[next_st_int];
         Q[st,ac] = (1-alpha)*Q[st,ac] + alpha*(R[st,ac] + gamma*max(Q[sprime,:]));
     iter=iter+1;
     deltaQ = np.abs(Q-Q_prev);
     deltaQ_norm = np.mean(deltaQ);
-    print("dQ = ", deltaQ_norm)
+    # print("dQ = ", deltaQ_norm)
     Q_prev = Q*1.0;
 
 Q_swalk = Q;
 
-ipdb.set_trace()
+# ipdb.set_trace()
 #****************module for avoiding obstacles*****************
 W=7; D=25;
 H=8; L=3;
@@ -109,7 +110,7 @@ Q = np.random.rand(H,L)*1e-3;
 #R = np.zeros((16,3))
 #R states are 000, 001, 010, 011, 111, 110, 101, 100; 1=obstacle, 0=no obstacle
 #R actions are move NE, move E, move SE
-
+R[0,1] = 10.;
 R[1,2] = obstacle_penalty;
 R[2,1] = obstacle_penalty;
 R[3,1:] = obstacle_penalty;
@@ -132,7 +133,7 @@ tol=1e-3;
 iter_min=100;
 iter_max = 1000;
 # while deltaQ_norm>tol:
-dict = {'000':0, '001':1, '010':2, '011':3, '111':4, '110':5, '101':6, '100':7}
+dict_o = {'000':0, '001':1, '010':2, '011':3, '111':4, '110':5, '101':6, '100':7}
 
 
 # while iter<iter_max:
@@ -168,7 +169,7 @@ while iter<iter_max:
         break
     while jj<D-1:
         st_int = str(O[i+1,jj+1])+ str(O[i,jj+1]) + str(O[i-1,jj+1]);
-        st = dict[st_int];
+        st = dict_o[st_int];
         val_act_picked=0;
         # if deltaQ_norm<tol and iter>iter_min:
         #     break
@@ -193,7 +194,7 @@ while iter<iter_max:
             next_st_int = '000';
         else:
             next_st_int = str(O[i+1,jj+1])+ str(O[i,jj+1]) + str(O[i-1,jj+1]);
-        sprime = dict[next_st_int];
+        sprime = dict_o[next_st_int];
         Q[st,ac] = (1-alpha)*Q[st,ac] + alpha*(R[st,ac] + gamma*max(Q[sprime,:]));
         # st = sprime;
     iter=iter+1;
@@ -210,13 +211,13 @@ Q_obstacle = Q;
 
 H=8; L=3;
 # litter_penalty = -100;
-litter_reward = 50.;
+litter_reward = 100.;
 R = np.zeros((H,L));
 Q = np.random.rand(H,L)*1e-3;
 #R = np.zeros((16,3))
 #R states are 000, 001, 010, 011, 111, 110, 101, 100; 1=litter, 0=no litter
 #R actions are move NE, move E, move SE
-
+R[0,1] = 40.;#reward for just moving forward
 R[1,2] = litter_reward;
 R[2,1] = litter_reward;
 R[3,1:] = litter_reward;
@@ -239,7 +240,7 @@ tol=1e-3;
 iter_min=100;
 iter_max = 1000;
 # while deltaQ_norm>tol:
-dict = {'000':0, '001':1, '010':2, '011':3, '111':4, '110':5, '101':6, '100':7}
+dict_l = {'000':0, '001':1, '010':2, '011':3, '111':4, '110':5, '101':6, '100':7}
 
 while iter<iter_max:
     start = random.randint(2,4)
@@ -252,7 +253,7 @@ while iter<iter_max:
     while jj<D-1:
         st_int = str(O[i+1,jj+1])+ str(O[i,jj+1]) + str(O[i-1,jj+1]);
         # st_int = str(O[i+1,jj])+ str(O[i,jj+1]) + str(O[i-1,jj]);
-        st = dict[st_int];
+        st = dict_l[st_int];
         val_act_picked=0;
         if deltaQ_norm<tol and iter>iter_min:
             break
@@ -280,7 +281,7 @@ while iter<iter_max:
         else:
             next_st_int = str(O[i+1,jj+1])+ str(O[i,jj+1]) + str(O[i-1,jj+1]);
             # next_st_int = str(O[i+1,jj])+ str(O[i,jj+1]) + str(O[i-1,jj]);
-        sprime = dict[next_st_int];
+        sprime = dict_l[next_st_int];
         Q[st,ac] = (1-alpha)*Q[st,ac] + alpha*(R[st,ac] + gamma*max(Q[sprime,:]));
         if O[i,jj]==1:
             O[i,jj]=0; #litter has been picked up
@@ -297,30 +298,80 @@ Q_litter = Q;
 
 #***********************Generating map and executing agent***************************
 H=7; L=25;
+W=7; D=25;
 M = np.zeros((H,L));
-start = random.randint(0,H-1);
 
-M = np.random.randint(8, size=(H, L))
+
+M = np.random.randint(8, size=(W, D))
 M[M>2]=0;
 
 M_o = M*1;
 M_o[M_o==1]=0;
-M_0=M_o/2;
+M_o[M_o==2]=1;
+M_o[:,0]=0;#so that agent does not begin from an obstacle
 
 
 M_l = M*1;
 M_l[M_l==2]=0;
 
-M_s = np.zeros((H,L));
-M_s[2:4,:]=1;
+M_s = M*0;
+M_s[2:5,:]=1;
 
+#***********************Normalizing Q matrices***********************
+# Q_swalk_rowsums = Q_swalk.sum(axis=1);
+# Q_swalk = Q_swalk/ Q_swalk_rowsums[:,np.newaxis];
+Q_swalk = normalize(Q_swalk, axis=1, norm='l1');
+Q_obstacle = normalize(Q_obstacle, axis=1, norm='l1');
+Q_litter = normalize(Q_litter, axis=1, norm='l1');
 
-
-j=0;
+start = random.randint(2,W-3);
+jj=0;
 i=start;
-# while j<L-1:
+agent_i = i;
+agent_j = jj;
+Q_ac = np.zeros(3);
+# ipdb.set_trace()
+w_s = 5; w_o=5; w_l=8;
+while jj<D-1:
+    st_ind_o = str(M_o[i+1,jj+1])+ str(M_o[i,jj+1]) + str(M_o[i-1,jj+1]);
+    st_o = dict_o[st_ind_o];
+
+    st_ind_l = str(M_l[i+1,jj+1])+ str(M_l[i,jj+1]) + str(M_l[i-1,jj+1]);
+    st_l = dict_l[st_ind_l];
+
+    st_ind_s = str(M_s[i+1,jj+1])+ str(M_s[i,jj+1]) + str(M_s[i-1,jj+1]);
+    st_s = dict_s[st_ind_s];
+
+    Q_ac[0] = w_s*Q_swalk[st_s,0] + w_o*Q_obstacle[st_o,0] + w_l*Q_litter[st_l,0];
+    Q_ac[1] = w_s*Q_swalk[st_s,1] + w_o*Q_obstacle[st_o,1] + w_l*Q_litter[st_l,1];
+    Q_ac[2] = w_s*Q_swalk[st_s,2] + w_o*Q_obstacle[st_o,2] + w_l*Q_litter[st_l,2];
+    print(i)
+    ac = np.argmax(Q_ac);
+    if ac==0 and i>=W-2:
+        ac=np.argmax(Q_ac[1:])+1
+    if ac==2 and i<=1:
+        ac=np.argmax(Q_ac[:2])
+
+    if ac==0:
+        i=i+1;
+    elif ac==2:
+        i=i-1;
+    jj=jj+1;
 
 
+    agent_i = np.vstack([agent_i,i]);
+    agent_j = np.vstack([agent_j,jj]);
+
+
+
+
+plt.spy(np.ones((W,D)), marker='o', markersize=6, color='k')
+plt.spy(M_s, marker='o', markersize=6, color='g')
+plt.spy(M_o, marker='x', markersize=10, color='r')
+plt.spy(M_l, marker='s', markersize=10, color='b')
+# plt.plot(agent_j, W-agent_i-1, '--k')
+plt.plot(agent_j, agent_i, '--k')
+plt.show()
 
 ipdb.set_trace()
 # for i in range(0,H):
