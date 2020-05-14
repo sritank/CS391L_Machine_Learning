@@ -52,8 +52,8 @@ iter=0;
 iter_min=500;
 iter_max=1000;
 tol=1e-3;
-O = np.random.randint(2, size=(W, D))*0
-O[3:6,:]=1;
+M = np.random.randint(2, size=(W, D))*0
+M[3:6,:]=1;
 # st_ac_pair_picked=0;
 while iter<iter_max:
     start = random.randint(2,6)
@@ -63,7 +63,7 @@ while iter<iter_max:
     if deltaQ_norm<tol and iter>iter_min:
         break
     while  jj<D-1:
-        st_int = str(O[i+1,jj+1])+ str(O[i,jj+1]) + str(O[i-1,jj+1]);
+        st_int = str(M[i+1,jj+1])+ str(M[i,jj+1]) + str(M[i-1,jj+1]);
         st = dict_s[st_int];
         val_act_picked=0;
         # ipdb.set_trace()
@@ -88,7 +88,7 @@ while iter<iter_max:
         if jj==D-1:
             next_st_int = '111';
         else:
-            next_st_int = str(O[i+1,jj+1])+ str(O[i,jj+1]) + str(O[i-1,jj+1]);
+            next_st_int = str(M[i+1,jj+1])+ str(M[i,jj+1]) + str(M[i-1,jj+1]);
         sprime = dict_s[next_st_int];
         Q[st,ac] = (1-alpha)*Q[st,ac] + alpha*(R[st,ac] + gamma*max(Q[sprime,:]));
     iter=iter+1;
@@ -163,12 +163,12 @@ while iter<iter_max:
     start = random.randint(2,4)
     jj=0;
     i=start;
-    O = np.random.randint(6, size=(W, D))
-    O[O!=1]=0;
+    M = np.random.randint(6, size=(W, D))
+    M[M!=1]=0;
     if deltaQ_norm<tol and iter>iter_min:
         break
     while jj<D-1:
-        st_int = str(O[i+1,jj+1])+ str(O[i,jj+1]) + str(O[i-1,jj+1]);
+        st_int = str(M[i+1,jj+1])+ str(M[i,jj+1]) + str(M[i-1,jj+1]);
         st = dict_o[st_int];
         val_act_picked=0;
         # if deltaQ_norm<tol and iter>iter_min:
@@ -193,7 +193,7 @@ while iter<iter_max:
         if jj==D-1:
             next_st_int = '000';
         else:
-            next_st_int = str(O[i+1,jj+1])+ str(O[i,jj+1]) + str(O[i-1,jj+1]);
+            next_st_int = str(M[i+1,jj+1])+ str(M[i,jj+1]) + str(M[i-1,jj+1]);
         sprime = dict_o[next_st_int];
         Q[st,ac] = (1-alpha)*Q[st,ac] + alpha*(R[st,ac] + gamma*max(Q[sprime,:]));
         # st = sprime;
@@ -246,12 +246,12 @@ while iter<iter_max:
     start = random.randint(2,4)
     jj=0;
     i=start;
-    O = np.random.randint(6, size=(W, D))
-    O[O!=1]=0;
+    M = np.random.randint(6, size=(W, D))
+    M[M!=1]=0;
     if deltaQ_norm<tol and iter>iter_min:
         break
     while jj<D-1:
-        st_int = str(O[i+1,jj+1])+ str(O[i,jj+1]) + str(O[i-1,jj+1]);
+        st_int = str(M[i+1,jj+1])+ str(M[i,jj+1]) + str(M[i-1,jj+1]);
         # st_int = str(O[i+1,jj])+ str(O[i,jj+1]) + str(O[i-1,jj]);
         st = dict_l[st_int];
         val_act_picked=0;
@@ -279,12 +279,12 @@ while iter<iter_max:
             next_st_int = '000';
             # next_st_int = str(O[i+1,jj])+ '0' + str(O[i-1,jj]);
         else:
-            next_st_int = str(O[i+1,jj+1])+ str(O[i,jj+1]) + str(O[i-1,jj+1]);
+            next_st_int = str(M[i+1,jj+1])+ str(M[i,jj+1]) + str(M[i-1,jj+1]);
             # next_st_int = str(O[i+1,jj])+ str(O[i,jj+1]) + str(O[i-1,jj]);
         sprime = dict_l[next_st_int];
         Q[st,ac] = (1-alpha)*Q[st,ac] + alpha*(R[st,ac] + gamma*max(Q[sprime,:]));
-        if O[i,jj]==1:
-            O[i,jj]=0; #litter has been picked up
+        if M[i,jj]==1:
+            M[i,jj]=0; #litter has been picked up
         # st = sprime;
     iter=iter+1;
     deltaQ = np.abs(Q-Q_prev);
@@ -302,7 +302,7 @@ W=7; D=25;
 M = np.zeros((H,L));
 
 
-M = np.random.randint(8, size=(W, D))
+M = np.random.randint(12, size=(W, D))
 M[M>2]=0;
 
 M_o = M*1;
@@ -324,14 +324,17 @@ Q_swalk = normalize(Q_swalk, axis=1, norm='l1');
 Q_obstacle = normalize(Q_obstacle, axis=1, norm='l1');
 Q_litter = normalize(Q_litter, axis=1, norm='l1');
 
-start = random.randint(2,W-3);
+start = 5;random.randint(2,W-3);
 jj=0;
 i=start;
 agent_i = i;
 agent_j = jj;
 Q_ac = np.zeros(3);
 # ipdb.set_trace()
-w_s = 5; w_o=5; w_l=8;
+w_s = 5; w_o=10; w_l=8;
+# w_s = 1; w_o=0; w_l=0;
+# w_s = 0; w_o=1; w_l=0;
+# w_s = 0; w_o=0; w_l=1;
 while jj<D-1:
     st_ind_o = str(M_o[i+1,jj+1])+ str(M_o[i,jj+1]) + str(M_o[i-1,jj+1]);
     st_o = dict_o[st_ind_o];
@@ -346,6 +349,7 @@ while jj<D-1:
     Q_ac[1] = w_s*Q_swalk[st_s,1] + w_o*Q_obstacle[st_o,1] + w_l*Q_litter[st_l,1];
     Q_ac[2] = w_s*Q_swalk[st_s,2] + w_o*Q_obstacle[st_o,2] + w_l*Q_litter[st_l,2];
     print(i)
+    # ipdb.set_trace()
     ac = np.argmax(Q_ac);
     if ac==0 and i>=W-2:
         ac=np.argmax(Q_ac[1:])+1
@@ -364,31 +368,22 @@ while jj<D-1:
 
 
 
-
-plt.spy(np.ones((W,D)), marker='o', markersize=6, color='k')
-plt.spy(M_s, marker='o', markersize=6, color='g')
-plt.spy(M_o, marker='x', markersize=10, color='r')
-plt.spy(M_l, marker='s', markersize=10, color='b')
-# plt.plot(agent_j, W-agent_i-1, '--k')
-plt.plot(agent_j, agent_i, '--k')
+plt.rcParams.update({'savefig.dpi':600})
+plt.rcParams.update({'font.size':21})
+plt.spy(np.ones((W,D)), marker='o', markersize=15, color='k', label='outside path')
+plt.spy(M_s, marker='o', markersize=15, color='g', label ='sidewalk')
+plt.spy(M_o, marker='x', markersize=15, markeredgewidth = 4, color='r')
+plt.spy(M_l, marker='s', markersize=16, color='b')
+plt.plot(agent_j, agent_i, '--k', linewidth = 5)
+# plt.legend(handles = [l1,l2], labels = ['outside path', 'sidewalk']);
+# plt.title('Litter module')
+# plt.title('Combined agent')
+plt.tight_layout()
+# plt.savefig('./World_map.png')
+# plt.savefig('./sidewalk.png')
+# plt.savefig('./obstacle.png')
+# plt.savefig('./litter.png')
+plt.savefig('./combined_agent.png')
 plt.show()
 
 ipdb.set_trace()
-# for i in range(0,H):
-#     for j in range(0,L):
-#         # T(i,j)=1;
-#         if i==0:
-#             T[i,L+j]=1;
-#         if j==0:
-#             T[i,j+1]=1;
-#         if i==H-1:
-#             T[i,(H-2)*L+j]=1;
-#         if j==L-1:
-#             T[i,i*L+j-1]=1;
-#         if i<H-1 and i>0 and j<L-1 and j>0:
-#             T[i,i*L+j+1]=1;
-#             T[i,(i-1)*L+j]=1;
-#             T[i,(i+1)*L+j]=1;
-# Q[0:1,:] = -50;
-# Q[4:5,:] = -50;
-# Q[2:3,:] = 2;
